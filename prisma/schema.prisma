@@ -10,18 +10,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+enum UserRole {
+  USER
+  ADMIN
 }
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  author    User    @relation(fields: [authorId], references: [id])
-  authorId  Int
+model User {
+  id    Int      @id @default(autoincrement())
+  email String   @unique
+  name  String?
+  role  UserRole @default(USER)
+  githubId String? @unique
+}
+
+enum MediaSource {
+  CUSTOM
+  INSTAGRAM
+  YOUTUBE
+}
+
+enum MediaType {
+  VIDEO
+  IMAGE
+}
+
+model MediaFile {
+  id      Int       @id @default(autoincrement())
+  fileUrl String
+  type    MediaType
+
+  mediaVideo MediaVideo? @relation(name: "MediaVideoToFile", fields: [mediaVideoId], references: [id])
+  mediaVideoId Int? @unique
+
+  mediaVideoThumbnail MediaVideo? @relation(name: "MediaThumbnailToFile", fields: [mediaVideoThumbnailId], references: [id])
+  mediaVideoThumbnailId Int? @unique
+
+  mediaImage   MediaImage? @relation(fields: [mediaImageId], references: [id])
+  mediaImageId Int? @unique
+  mediaAlbum   MediaAlbum?  @relation(fields: [mediaAlbumId], references: [id])
+  mediaAlbumId Int? @unique
+}
+
+model MediaVideo {
+  id              Int         @id @default(autoincrement())
+  file            MediaFile?   @relation(name: "MediaVideoToFile")
+  thumbnailFile   MediaFile? @relation(name: "MediaThumbnailToFile")
+  source          MediaSource @default(CUSTOM)
+  sourceUrl       String?     @unique
+  title           String?
+  author          String?
+  caption         String?
+}
+
+model MediaImage {
+  id        Int         @id @default(autoincrement())
+  file      MediaFile?
+  source    MediaSource @default(CUSTOM)
+  sourceUrl String?     @unique
+  title     String?
+  author    String?
+  caption   String?
+}
+
+model MediaAlbum {
+  id        Int         @id @default(autoincrement())
+  source    MediaSource @default(CUSTOM)
+  sourceUrl String?     @unique
+  title     String?
+  author    String?
+  caption   String?
+  content   MediaFile[]
 }
